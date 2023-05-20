@@ -1,3 +1,4 @@
+import StoreProvider from "@/store/store-context";
 import "@/styles/globals.scss";
 import { IBM_Plex_Sans } from "@next/font/google";
 
@@ -8,8 +9,10 @@ const iBM_Plex_Sans = IBM_Plex_Sans({
 
 export default function App({ Component, pageProps }) {
   return (
-    <main className={iBM_Plex_Sans.className}>
-      <Component {...pageProps} />
-    </main>
+    <StoreProvider>
+      <main className={iBM_Plex_Sans.className}>
+        <Component {...pageProps} />
+      </main>
+    </StoreProvider>
   );
 }

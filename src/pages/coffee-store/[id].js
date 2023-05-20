@@ -1,21 +1,40 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
 import cls from "classnames";
-
-import styles from "../../styles/coffee-strore.module.scss";
 import Image from "next/image";
 import Link from "next/link";
+
+import styles from "../../styles/coffee-strore.module.scss";
 import { fetchCoffeeStores } from "@/lib/coffee-stores";
+import { useContext, useEffect, useState } from "react";
+import { StoreContext } from "../../store/store-context";
+import { isEmpty } from "@/utils";
 
 const CoffeeStore = ({ coffeeStore }) => {
   const router = useRouter();
-  if (router.isFallback) return <div>Loading...</div>;
+  const [newCoffeeStore, setNewCoffeStore] = useState(coffeeStore);
+  const { id } = router.query;
+  const {
+    state: { nearbyStores },
+  } = useContext(StoreContext);
+  console.log(id);
+  useEffect(() => {
+    if (coffeeStore) {
+      if (isEmpty(coffeeStore)) {
+        const newStore = nearbyStores.find((store) => store.fsq_id === id);
+        console.log(newStore);
+        setNewCoffeStore(newStore);
+      }
+    }
+  }, [id, nearbyStores, coffeeStore]);
 
   const handleUpvoteButton = () => {
     console.log("handle upvote");
   };
+  if (router.isFallback) return <div>Loading...</div>;
 
-  const { location, name, imgUrl } = coffeeStore;
+  const { location, name, imgUrl } = newCoffeeStore;
+
   return (
     <div>
       <Head>
@@ -37,7 +56,7 @@ const CoffeeStore = ({ coffeeStore }) => {
             width={600}
             height={360}
             className={styles.storeImg}
-            alt={name}
+            alt={name || "Coffee Store"}
           />
         </div>
 
@@ -98,9 +117,10 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const coffeeStores = await fetchCoffeeStores();
   const id = params.id;
+  const coffeeStore = coffeeStores.find((store) => store.fsq_id === id);
   return {
     props: {
-      coffeeStore: coffeeStores.find((store) => store.fsq_id === id),
+      coffeeStore: coffeeStore || {},
     },
   };
 }
