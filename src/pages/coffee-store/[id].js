@@ -105,6 +105,7 @@ const CoffeeStore = ({ coffeeStore }) => {
     <div>
       <Head>
         <title>{name}</title>
+        <meta name="description" content={`Explore ${name} coffee store`} />
       </Head>
       <div className={styles.container}>
         <div className={styles.col1}>
@@ -132,7 +133,7 @@ const CoffeeStore = ({ coffeeStore }) => {
               <Image
                 src="/static/icons/places.svg"
                 width="24"
-                height="24"
+                height="24" 
                 alt="places icon"
               />
               <p className={styles.text}>{location.formatted_address}</p>

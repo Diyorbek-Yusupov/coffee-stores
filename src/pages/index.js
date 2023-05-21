@@ -45,9 +45,10 @@ export default function Home({ coffeeStores }) {
   return (
     <>
       <Head>
-        <title>Coffee Connoiseur</title>
-        <meta name="description" content="Discover your coffee store" />
+        <title>Coffeeland</title>
+        <meta name="description" content="Coffeeland: search and discover your coffee store" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="google-site-verification" content="hBxdbyBVh9N6AdQhDu8d3XNJIN44z-6iArKnws5XAac" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={`${styles.main}`}>
