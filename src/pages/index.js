@@ -18,17 +18,17 @@ export default function Home({ coffeeStores }) {
 
   const { handleTrackLocation, locationErrorMsg, isFindingLocation } =
     useTrackLocation();
-  console.log(coffeeStores);
   const handleBannerOnClick = () => {
     handleTrackLocation();
   };
-  console.log({ locationErrorMsg });
 
   useEffect(() => {
     if (latLong) {
       const getNearCoffeeStores = async () => {
         try {
-          const nearbyStores = await fetchCoffeeStores(latLong, 30);
+          const nearbyStores = await fetch(
+            `/api/getCoffeeStoresByLocation?latLong=${latLong}&limit=30`
+          ).then((res) => res.json());
           dispatch({
             type: ACTION_TYPES.SET_NEARBY_STORES,
             payload: { nearbyStores },

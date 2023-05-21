@@ -3,38 +3,104 @@ import Head from "next/head";
 import cls from "classnames";
 import Image from "next/image";
 import Link from "next/link";
+import useSWR from "swr";
 
 import styles from "../../styles/coffee-strore.module.scss";
 import { fetchCoffeeStores } from "@/lib/coffee-stores";
 import { useContext, useEffect, useState } from "react";
 import { StoreContext } from "../../store/store-context";
-import { isEmpty } from "@/utils";
+import { fetcher, isEmpty } from "@/utils";
 
 const CoffeeStore = ({ coffeeStore }) => {
   const router = useRouter();
-  const [newCoffeeStore, setNewCoffeStore] = useState(coffeeStore);
+  const [newCoffeeStore, setNewCoffeStore] = useState(coffeeStore || {});
+  const [votingCount, setVotingCount] = useState(0);
   const { id } = router.query;
   const {
     state: { nearbyStores },
   } = useContext(StoreContext);
-  console.log(id);
+
+  const handleCreateCoffeeStore = async (storeFromContext) => {
+    const { fsq_id, imgUrl, location, name, timezone } = storeFromContext;
+    try {
+      const response = await fetch("/api/createCoffeeStore", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: String(fsq_id),
+          imgUrl,
+          address: location?.formatted_address || "",
+          region: location?.region || "",
+          name,
+          timezone,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+    } catch (error) {
+      console.error("Error creating coffee store:", error);
+    }
+  };
+
   useEffect(() => {
     if (coffeeStore) {
       if (isEmpty(coffeeStore)) {
         const newStore = nearbyStores.find((store) => store.fsq_id === id);
-        console.log(newStore);
-        setNewCoffeStore(newStore);
+        if (newStore) {
+          setNewCoffeStore(newStore);
+          handleCreateCoffeeStore(newStore);
+        }
+      } else {
+        handleCreateCoffeeStore(coffeeStore);
       }
     }
   }, [id, nearbyStores, coffeeStore]);
 
-  const handleUpvoteButton = () => {
-    console.log("handle upvote");
+  const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setNewCoffeStore(data[0]);
+      setVotingCount(data[0].voting);
+    }
+  }, [data]);
+
+  if (router.isFallback || !id) return <div>Loading...</div>;
+  if (error) {
+    console.error(error);
+    return <p>Error with getting store</p>;
+  }
+
+  const handleUpvoteButton = async () => {
+    try {
+      const response = await fetch("/api/upvoteCoffeeStoreById", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+      if (dbCoffeeStore && dbCoffeeStore.length > 0) {
+        setVotingCount((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error upvoting coffee store:", error);
+    }
   };
-  if (router.isFallback) return <div>Loading...</div>;
-
-  const { location, name, imgUrl } = newCoffeeStore;
-
+  const {
+    location: locationInfo,
+    name,
+    imgUrl,
+    address,
+    region,
+  } = newCoffeeStore;
+  const location = locationInfo || { formatted_address: address, region };
   return (
     <div>
       <Head>
@@ -90,7 +156,7 @@ const CoffeeStore = ({ coffeeStore }) => {
               height="24"
               alt="star icon"
             />
-            <p className={styles.text}>1</p>
+            <p className={styles.text}>{votingCount}</p>
           </div>
 
           <button className={styles.upvoteButton} onClick={handleUpvoteButton}>
